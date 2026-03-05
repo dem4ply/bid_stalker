@@ -11,3 +11,5 @@ pipdeptree
 rope
 build
 ropevim
+
+chibi_elasticsearch[vcr]

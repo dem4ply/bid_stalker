@@ -8,7 +8,8 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = []
+requirements = [
+    'chibi_browser>=0.1.1', 'chibi_elasticsearch>=1.2.0', 'chibi_django>=0.5.1' ]
 
 setup(
     author="dem4ply",
