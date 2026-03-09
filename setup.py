@@ -36,6 +36,6 @@ setup(
     name='bid_stalker',
     packages=find_packages(include=['bid_stalker', 'bid_stalker.*']),
     url='https://github.com/dem4ply/bid_stalker',
-    version='0.0.1',
+    version='1.0.0',
     zip_safe=False,
 )
