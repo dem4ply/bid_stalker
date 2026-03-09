@@ -5,6 +5,8 @@ import itertools
 from vcr_unittest import VCRTestCase
 from bid_stalker.site.bidspotter import bidspotter_auctions, bidspotter
 from bid_stalker.site.bidspotter import Catalog
+from bid_stalker.site.bidspotter.bidspotter import Article
+from bid_stalker.site.bidspotter.elastic import Article as Article_model
 from chibi_requests import status_code
 from elasticsearch_dsl import Document
 from chibi_elasticsearch.unittests.vcr import Chibi_elastic_vcr
@@ -141,3 +143,95 @@ class Test_auction_data( Test_bidspotter_cookies, Chibi_elastic_vcr ):
         location.address = {}
         result = self.article.to_dict()
         self.assertNotIn( 'address', result.location )
+
+
+class Test_bidspotter_article( Test_bidspotter_cookies, VCRTestCase ):
+
+    def setUp( self ):
+        super().setUp()
+        audictions = list( itertools.islice( self.site.articles, 10 ) )
+        self.audiction = audictions[0]
+        self.articles = list( itertools.islice( self.audiction.articles, 10 ) )
+        self.article = self.articles[0]
+
+
+class Test_bidspotter_articles( Test_bidspotter_article ):
+
+    def test_audiction_should_have_articles( self ):
+        articles = list( itertools.islice( self.audiction.articles, 10 ) )
+        self.assertTrue( articles )
+
+    def test_the_articles_of_audiction_should_be_instances_of_article( self ):
+        articles = list( itertools.islice( self.audiction.articles, 10 ) )
+        self.assertTrue( articles )
+        for article in articles:
+            self.assertIsInstance( article, Article )
+
+    def test_article_to_dict_should_return_dict( self ):
+        self.assertIsInstance( self.article.to_dict(), dict )
+
+    def test_article_to_es_should_return_article_model( self ):
+        self.assertIsInstance( self.article.to_es(), Article_model )
+
+
+class Test_bidspotter_audcition_page( Test_bidspotter_cookies, VCRTestCase ):
+    def test_current_page_should_return_1( self ):
+        result = self.site.current_page
+        self.assertEqual( result, 1 )
+
+    def test_total_page_should_return_gt_1( self ):
+        result = self.site.total_pages
+        self.assertGreater( result, 1 )
+
+    def test_next_page_should_return_2( self ):
+        result = self.site.next_page.current_page
+        self.assertEqual( result, 2 )
+
+    def test_cannot_retrieve_100_pages( self ):
+        count = self.site.current_page
+        page = self.site
+        while count < 100:
+            count += 1
+            page = page.next_page
+            if page is None:
+                break
+        self.assertGreater( count, 2 )
+        self.assertLess( count, 100 )
+
+    def test_can_retrieve_all_audictions( self ):
+        total_articles = len( list( self.site.articles ) )
+        self.assertGreater( total_articles, 120 )
+
+
+class Test_bidspotter_articles_page( Test_bidspotter_cookies, VCRTestCase ):
+    def setUp( self ):
+        super().setUp()
+        audictions = list( itertools.islice( self.site.articles, 10 ) )
+        self.audiction = audictions[0]
+
+    def test_current_page_should_return_1( self ):
+        result = self.audiction.current_page
+        self.assertEqual( result, 1 )
+
+    def test_total_page_should_return_gt_1( self ):
+        result = self.audiction.total_pages
+        self.assertGreater( result, 1 )
+
+    def test_next_page_should_return_2( self ):
+        result = self.audiction.next_page.current_page
+        self.assertEqual( result, 2 )
+
+    def test_cannot_retrieve_100_pages( self ):
+        count = self.audiction.current_page
+        page = self.audiction
+        while count < 100:
+            count += 1
+            page = page.next_page
+            if page is None:
+                break
+        self.assertGreater( count, 2 )
+        self.assertLess( count, 100 )
+
+    def test_can_retrieve_all_audictions( self ):
+        total_articles = len( list( self.audiction.articles ) )
+        self.assertGreater( total_articles, 60 )
