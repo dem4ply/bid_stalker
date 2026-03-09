@@ -111,3 +111,5 @@ ENV/
 .*.swo
 .*.swp
 .*.swa
+
+**/cassettes/
