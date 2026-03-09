@@ -20,6 +20,27 @@ Scrapper for bids online
 * Documentation: https://bid-stalker.readthedocs.io.
 
 
+**********
+how to use
+**********
+
+.. code-block:: bash
+
+	# check config and if index are created
+	bid_stalker elastic
+	# create the index
+	bid_stalker elastic create
+	# print audictions for country
+	bid_stalker bidspotter mexico
+	# send the audictions to elasticsearch
+	bid_stalker bidspotter mexico --to_elastic
+	# list audictions from elasticsearch
+	bid_stalker elastic list
+	#scan missing articles of a auction
+	bid_stalker elastic scan --missing --pk=-rGFupwBf5atcTatMyOS
+
+
+
 Features
 --------
 
