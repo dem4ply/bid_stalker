@@ -1,4 +1,5 @@
 from marshmallow import Schema, INCLUDE, fields, EXCLUDE, pre_load
+from chibi_atlas import Chibi_atlas
 
 
 class Event( Schema ):
@@ -65,3 +66,49 @@ class Audiction( Schema ):
             if not isinstance( data[ 'location' ], list ):
                 data[ 'location' ] = [ data[ 'location' ] ]
         return data
+
+
+class Lot( Schema ):
+    kind = fields.String()
+    number = fields.String()
+
+
+class Auctioneer( Schema ):
+    name = fields.String()
+    url = fields.Url()
+
+
+class Info_article( Schema ):
+    description = fields.String()
+    auction = fields.String()
+    shipping = fields.String()
+    terms = fields.String()
+
+    class Meta:
+        unknown = INCLUDE
+
+
+class Catalog( Schema ):
+    name = fields.String()
+    url = fields.Url()
+    pk = fields.String( allow_none=True )
+
+    class Meta:
+        unknown = INCLUDE
+
+
+class Article( Schema ):
+    url = fields.Url()
+    name = fields.String()
+    catalog = fields.Nested( Catalog )
+    description = fields.String( data_key="info.description" )
+    info = fields.Nested( Info_article )
+    lot = fields.Nested( Lot )
+    images_url = fields.List( fields.Url )
+    tags = fields.List( fields.String )
+    audiction_date = fields.DateTime( format='%Y-%m-%dT%H-%M-%S%z' )
+    auctioneer = fields.Nested( Auctioneer )
+
+    class Meta:
+        unknown = INCLUDE
+        model = Chibi_atlas

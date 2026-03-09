@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
+import logging
+import time
 import sys
 
 from chibi.config import basic_config, load as load_config
@@ -11,6 +13,9 @@ from elasticsearch_dsl.connections import connections
 from chibi_elasticsearch.config import review_elasticsearch_config
 from chibi_elasticsearch.snippet import (
     index_exists, create_index_if_not_exists )
+
+
+logger = logging.getLogger( "bid_stalker.cli" )
 
 
 default_file_load( 'bid_stalker.py', touch=False )
@@ -106,6 +111,7 @@ def main():
         from bid_stalker.site.bidspotter.elastic import Article
         if args.command_elastic == 'create':
             create_index_if_not_exists( Audiction )
+            create_index_if_not_exists( Article )
             review_elasticsearch_config()
         elif args.command_elastic == 'list':
             print( "bidspotter" )
@@ -113,23 +119,38 @@ def main():
                 print( f"\tpk:   {audiction.pk}" )
                 print( f"\tname: {audiction.name}" )
                 print( f"\turl:  {audiction.url}" )
+                print( f"\tarticles:  {audiction.articles.count()}" )
                 print()
-            create_index_if_not_exists( Audiction )
-            review_elasticsearch_config()
         elif args.command_elastic == 'scan':
-            audiction = Audiction.get( id=args.pk )
+            audiction_model = Audiction.get( id=args.pk )
+            #bidspotter.prepare_session()
+            audiction = audiction_model.site
+            #audiction.session = bidspotter.session
+
+            audiction.prepare_session()
+
+            time.sleep( 10 )
             for article in audiction.articles:
-                article_model = article.to_es()
                 if args.missing:
-                    Article.save_if_not_exists()
+                    try:
+                        if Article.Q.url_exists( str( article ) ):
+                            logger.info( f"se salta el articulo: {article}" )
+                            continue
+                    except Exception as e:
+                        import pdb
+                        pdb.set_trace()
+                        raise
                 else:
                     raise NotImplementedError(
                         "no implementado escaneo completo" )
-            print( args.pk )
-            print( "scan" )
+                article_model = article.to_es()
+                article_model.catalog.pk = audiction_model.pk
+                article_model.save_if_not_exists()
+                time.sleep( 10 )
         else:
             review_elasticsearch_config()
-        print( f"bidspotter.Audiction.exists: {index_exists( Audiction )}" )
+            print( f"bidspotter.Audiction.exists: {index_exists( Audiction )}" )
+            print( f"bidspotter.Article.exists: {index_exists( Article )}" )
     else:
         raise NotImplementedError(
             "no esta implementada la opcion de '{args.command}'" )
