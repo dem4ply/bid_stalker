@@ -43,9 +43,11 @@ class Test_auction_elastic_save_article( Test_elastic ):
         self.articles = list( itertools.islice( self.site.articles, 10 ) )
         self.article = self.articles[0]
 
-    def test_save_model_should_work( self ):
+    @patch_doc_save
+    def test_save_model_should_work( self, save ):
         model = self.article.to_es()
         result = model.save()
+        save.assert_called_once()
         self.assertTrue( result )
 
 
@@ -65,6 +67,13 @@ class Test_audiction_model( Test_elastic ):
         else:
             cls.model.save()
         cls.flush_and_get( cls.model )
+
+    @classmethod
+    def tearDownClass( cls ):
+        super().tearDownClass()
+        models = list( Audiction.Q.url( cls.model.url ).scan() )
+        for model in models:
+            model.delete()
 
     @classmethod
     def flush_and_get( cls, model, retry=0, max_retry=5 ):
